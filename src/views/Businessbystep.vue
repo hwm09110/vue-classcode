@@ -1,7 +1,8 @@
 <template>
   <div class="businessbystep-wrap">
     <tab :active="active" :tabList="tabList" @on-tab-click="handleTabClick"></tab>
-    <div class="step-wrap" style="display:none;">
+    <progress-bar :activeNum="progressNum" v-show="showProgress"></progress-bar>
+    <div class="step-wrap" v-show="showStep0">
 				<h2 class="module-title">[和教育学生卡]业务办理</h2>
 				<div class="class-info-box">
 					<div class="pre-tips">请确认您的班级信息</div>
@@ -28,125 +29,119 @@
 					</div>
 				</div>
 				<div class="operate-box">
-					<button>立即开通</button>
-          <bottom-tips></bottom-tips>
+					<button @click="handleOpenStart">立即开通</button>
+          <bottom-tips :isAgree.sync="isChecked"></bottom-tips>
 				</div>
     </div>
-    <progress-bar :activeNum="progressNum"></progress-bar>
-    <div class="step-wrap" style="display:none;">
+    <div class="step-wrap" v-show="showStep1">
 				<h2 class="module-title">开通手机号</h2>
 				<div class="bussiness-info-box">
 					<div class="pre-tips">请认真完整填写以下信息，我们将统一为您办理</div>
-          <div class="open-phone-box">
+          <div class="open-phone-box" v-for="(item,index) of openPhones" :key="index">
             <div class="info-item-box">
               <div class="item-name">
-                开通业务手机号：
-                <span class="star">*</span>
+                开通业务手机号{{ openPhones.length > 1? (index + 1) : ''}}：
+                <span class="star" v-if="index == 0">*</span>
               </div>
               <div class="item-content">
-                <input type="number" class="open-phone" placeholder="填写手机号码">
+                <input type="number" v-model.trim="item.phone" placeholder="填写手机号码">
               </div>
             </div>
             <div class="info-item-box">
               <div class="item-name">
                 验证码：
-                <span class="star">*</span>
+                <span class="star" v-if="index == 0">*</span>
               </div>
               <div class="item-content">
-                <input type="number" class="yzm" placeholder="填写6位验证码">
+                <input type="number" v-model.trim="item.yzm" placeholder="填写6位验证码">
               </div>
             </div>
           </div>
           <div class="get-code-tips">
-            <span>使用开通业务手机号（限河南移动），编辑短信3496 发送到10086，将获得的验证码。</span>
+            <span>{{getcodetips}}</span>
             <a class="sendmsg" href="javascript:;">发送短信</a>
           </div>
 				</div>
 				<div class="operate-box">
-					<button>下一步</button>
+					<button @click="handleStep1">下一步</button>
 				</div>
     </div>
-    <div class="step-wrap" style="display:none;">
+    <div class="step-wrap" v-show="showStep2">
 				<h2 class="module-title">学生信息</h2>
 				<div class="stu-info-box">
 					<div class="pre-tips">请认真完整填写以下信息，我们将统一为您办理</div>
-					<div class="item-box" data-isrequire="1">
+					<div class="item-box">
 						<div class="item-name">
 							姓名：<span class="star">*</span>
 						</div>
 						<div class="item-content">
-							<input type="text" class="stu-name" placeholder="填写学生姓名">
+							<input type="text" placeholder="填写学生姓名" v-model.trim="studentInfo.name">
 						</div>
 					</div>
-					<div class="item-box" data-isrequire="1">
+					<div class="item-box">
 						<div class="item-name">
 							性别：
 							<span class="star">*</span>
 						</div>
 						<div class="item-content">
 							<ul class="choose-box stu-gender">
-								<li class="active">男生</li>
-								<li>女生</li>
+								<li :class="{active:studentInfo.gender == 1}" @click="studentInfo.gender = 1">男生</li>
+								<li :class="{active:studentInfo.gender == 2}" @click="studentInfo.gender = 2">女生</li>
 							</ul>
 						</div>
 					</div>
 				</div>
 				<h2 class="phone-tips">亲情号码（学生持卡可免费拨打电话）</h2>
 				<div class="parent-phone-box">
-					<div class="row-box" data-index="1" data-isrequire="1" data-rel="1">
+					<div class="row-box" v-for="(item,index) of relphones" :key="index" v-show="index < showRelPhoneInputNum">
 						<div class="row-name">
-							第一联系人：<span class="star">*</span>
+							第{{chineseNumber[index]}}联系人：<span class="star" v-if="item.isrequire == 1">*</span>
             </div>
 						<div class="row-content">
 							<div class="input-wrap">
-								<input type="number" class="phone" placeholder="输入手机号码">
+								<input type="number" placeholder="输入手机号码" v-model.trim="item.phone">
 							</div>
 							<div class="input-wrap">
-								<select class="relationship">
+								<select class="relationship" v-model="item.rel">
 									<option value="">与学生关系</option>
-									<option value="爸爸">爸爸</option>
-									<option value="妈妈">妈妈</option>
-									<option value="爷爷">爷爷</option>
-									<option value="奶奶">奶奶</option>
-									<option value="姑姑">姑姑</option>
-									<option value="叔叔">叔叔</option>
+									<option :value="rel" v-for="(rel,j) of relations" :key="j">{{rel}}</option>
 								</select>
 								<i class="arrow"></i>
 							</div>
 						</div>
 					</div>
-					<div class="open-more">
-						<span class="more-btn">填写更多联系人</span>
+					<div class="open-more" v-show="showMoreEntry">
+						<span class="more-btn" @click="handleGetMore">填写更多联系人</span>
 					</div>
 				</div>
 				<div class="operate-box">
-					<button class="three-next-btn">下一步</button>
+					<button @click="handleStep2">下一步</button>
 				</div>
     </div>
-    <div class="step-wrap">
+    <div class="step-wrap" v-show="showStep3">
       <div class="success-content-wrap">
-					<div class="success-info-box">
-						<div class="success-icon"></div>
-						<div class="success-text">业务办理提交成功！</div>
-						<div class="other-tips">我们将统一为您办理开通，请留意短信通知</div>
-					</div>
-					<div class="order-info-box">
-						<div class="item">
-							<span class="label">学生姓名：</span>
-							<span class="val open-stu-name">--</span>
-						</div>
-						<div class="item">
-							<span class="label">业务资费：</span>
-							<span class="val open-fee">--</span>
-						</div>
-						<div class="item">
-							<span class="label">开通业务手机号：</span>
-							<span class="val open-suc-phone">18202038213</span>
-						</div>
-					</div>
-				</div>
+        <div class="success-info-box">
+          <div class="success-icon"></div>
+          <div class="success-text">业务办理提交成功！</div>
+          <div class="other-tips">我们将统一为您办理开通，请留意短信通知</div>
+        </div>
+        <div class="order-info-box">
+          <div class="item">
+            <span class="label">学生姓名：</span>
+            <span class="val open-stu-name">--</span>
+          </div>
+          <div class="item">
+            <span class="label">业务资费：</span>
+            <span class="val open-fee">--</span>
+          </div>
+          <div class="item">
+            <span class="label">开通业务手机号：</span>
+            <span class="val open-suc-phone">18202038213</span>
+          </div>
+        </div>
+      </div>
+      <download-tips style="margin-top:0.133333rem;" :isXtl="isXtl"></download-tips>
     </div>
-    <download-tips style="margin-top:0.133333rem;" :isXtl="isXtl"></download-tips>
   </div>
 </template>
 
@@ -156,6 +151,8 @@ import Tab from '@c/Tab'
 import BottomTips from '@c/BottomTips'
 import ProgressBar from '@c/ProgressBar'
 import DownloadTips from '@c/DownloadTips'
+import utils from '@a/js/utils'
+import { all } from 'q';
 export default {
   name: 'businessbystep',
   components: {
@@ -177,15 +174,183 @@ export default {
           pathName: 'letter'
         }
       ],
+      isChecked: true, //是否同意用户协议
       isXtl: false, //是否学童乐
-      progressNum: 1 //当前完成进度
+      showProgress: false, //显示进度条
+      progressNum: 1, //当前完成进度
+      showStep0: true,
+      showStep1: false,
+      showStep2: false,
+      showStep3: false,
+      getcodetips: "使用开通业务手机号（限河南移动），编辑短信3496 发送到10086，将获得的验证码。",
+      chineseNumber: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'],
+      relations: ['爸爸', '妈妈', '爷爷', '奶奶', '姑姑', '叔叔'],
+      showRelPhoneInputNum:1,
+      showMoreEntry:true, //显示添加更多联系人入口
+      //开通业务手机号码 
+      openPhones: [
+        {phone:'18202038213', yzm:'123456'},
+        {phone:'', yzm:''},
+      ],
+      //学生信息
+      studentInfo: {
+        name: '黄伟明',
+        gender: 1, //1男 2女 
+      },
+      //亲情号码
+      relphones: [
+        {isrequire:1, isrel:'1', phone:'18202038215', rel:'爷爷', id:'1'},
+        {isrequire:0, isrel:'1', phone:'', rel:'', id:'2'},
+        {isrequire:0, isrel:'1', phone:'', rel:'', id:'3'},
+      ] 
     }
   },
   methods: {
     handleTabClick (index, item) {
       this.active = index
       this.$router.push({name:item.pathName})
-    }
+    },
+    handleOpenStart() {
+      if(!this.isChecked){
+        alert('请先勾选下面同意复选框 ')
+        return false
+      }
+      this.showStep(1)
+    },
+    handleStep1() {
+      var result = this.validateStep1()
+      if(result.error){
+        alert(result.msg)
+        return false
+      }
+      this.showStep(2)
+    },
+    handleStep2() {
+      var result = this.validateStep2()
+        console.log(result);
+      if(result.error){
+        alert(result.msg)
+        return false
+      }
+      console.log(this.studentInfo);
+      console.log(this.relphones);
+      this.showStep(3)
+    },
+    handleGetMore() {
+      this.showRelPhoneInputNum = this.relphones.length
+      this.showMoreEntry = false
+    },
+    validateStep1() {
+      let result = {error:false,msg:''}
+      this.openPhones.forEach((item,index) => {
+        if(index == 0){
+          if(!item.phone){
+            result['error'] = true
+            result['msg'] = "第一个手机号码不能为空"
+            return false
+          }
+          if(item.phone && !utils.isPhoneNum(item.phone)){
+            result['error'] = true
+            result['msg'] = "第一个手机号码格式不正确"
+            return false
+          }
+          if(!item.yzm){
+            result['error'] = true
+            result['msg'] = "开通验证码不能为空"
+            return false
+          }
+          if(item.yzm && item.yzm.length !== 6){
+            result['error'] = true
+            result['msg'] = "开通验证码格式不正确(验证码为6位数)"
+            return false
+          }
+        }else{
+          if(item.phone && !utils.isPhoneNum(item.phone)){
+            result['error'] = true
+            result['msg'] = "第"+( index + 1 )+"个手机号码格式不正确"
+            return false
+          }
+          if(item.phone && !item.yzm){
+            result['error'] = true
+            result['msg'] = "第"+( index + 1 )+"个手机号的开通验证码不能为空"
+            return false
+          }
+          if(item.phone && item.yzm && item.yzm.length !== 6){
+            result['error'] = true
+            result['msg'] = "第"+( index + 1 )+"个手机号的开通验证码格式不正确(验证码为6位数)"
+            return false
+          }
+        }
+      })
+      return result
+    },
+    validateStep2() {
+      let result = {error:false,msg:''}
+      if(!this.studentInfo.name){
+        result['error'] = true
+        result['msg'] = "学生姓名不能为空"
+        return result
+      }
+      for(let i = 0, len = this.relphones.length; i < len; i++){
+        let item = this.relphones[i]
+        if(item.isrequire == 1){
+          if(!item.phone){
+            result['error'] = true
+            result['msg'] = "亲情号码第"+(this.chineseNumber[i])+"联系人手机号码为必填选项"
+            console.log(i);
+            return result
+          }
+        }
+        if(item.phone && !utils.isPhoneNum(item.phone)){
+          result['error'] = true
+          result['msg'] = "亲情号码第"+(this.chineseNumber[i])+"联系人手机号码格式不正确"
+          console.log(i);
+          return result
+        }
+      }
+      return result
+    },
+    showStep(step) {
+      if(step == 0){
+        this.showStep0 = true
+        this.showStep1 = false
+        this.showStep2 = false
+        this.showStep3 = false
+        this.showProgress = false
+        this.progressNum = 1
+      }else if(step == 1){
+        this.showStep0 = false
+        this.showStep1 = true
+        this.showStep2 = false
+        this.showStep3 = false
+        this.showProgress = true
+        this.progressNum = 1
+      }else if(step == 2){
+        this.showStep0 = false
+        this.showStep1 = false
+        this.showStep2 = true
+        this.showStep3 = false
+        this.progressNum = 2
+      }else if(step == 3){
+        this.showStep0 = false
+        this.showStep1 = false
+        this.showStep2 = false
+        this.showStep3 = true
+        this.progressNum = 3
+      }
+    },
+    //设置发送短信内容到10086
+    setSendmsg() {
+			var $sendmsg = document.querySelector('.sendmsg')
+			if(utils.isIphone()){
+				$sendmsg.setAttribute('href','sms:10086&body=3496')
+			}else{
+				$sendmsg.setAttribute('href','sms:10086?body=3496')
+			}
+		}
+  },
+  mounted() {
+    this.setSendmsg()
   }
 }
 </script>

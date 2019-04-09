@@ -1,7 +1,8 @@
 <template>
   <div class="tips-wrap">
-      <div class="protocol">
-      <span class="checkbox checked"></span>同意<a href="http://www.baokaodaxue.com/ydzt/web_school/xhkagreement" target="_blank">《学护卡用户协议》</a>
+    <div class="protocol">
+      <span class="checkbox" :class="{checked:isAgree}" @click="handleCheck"></span>同意
+      <a href="http://www.baokaodaxue.com/ydzt/web_school/xhkagreement" target="_blank">《学护卡用户协议》</a>
     </div>
     <p class="help-tips">
       点击立即开通并同意《学护卡用户协议》表示您已清楚所申请业务服务内容，接受以上资费标准，自愿开通该业务
@@ -18,7 +19,18 @@
 
 <script>
 export default {
-  name: "BottomTips"
+  name: "BottomTips",
+  props: {
+    isAgree: {
+      type: Boolean,
+      default: true
+    }
+  },
+  methods: {
+    handleCheck() {
+      this.$emit('update:isAgree',!this.isAgree)
+    }
+  }
 }
 </script>
 
@@ -44,7 +56,7 @@ export default {
       position: relative;
       margin-right: 5px;
       vertical-align: middle;
-      &::after{
+      &.checked::after{
         content: '\00a0';
         display: inline-block;
         border: 3px solid #47aefe;
@@ -60,6 +72,7 @@ export default {
     }
     a{
       color: #47aefe;
+      text-decoration: none;
     }
   }
 }
