@@ -140,7 +140,8 @@
           </div>
         </div>
       </div>
-      <download-tips style="margin-top:0.133333rem;" :isXtl="isXtl"></download-tips>
+      <div class="grey-line"></div>
+      <download-tips :isXtl="isXtl"></download-tips>
     </div>
   </div>
 </template>
@@ -377,6 +378,10 @@ export default {
     position: relative;
     top: 6px;
   }
+  .grey-line{
+    height: 0.133333rem;
+    background-color: #efeff4;
+  }
   .class-info-box{
     padding: 0 42px;
     .pre-tips{
@@ -430,7 +435,6 @@ export default {
   }
   .bussiness-info-box{
     padding: 0 42px;
-    border-bottom: 1px solid #dcdcdc;
     .pre-tips{
       color: #8a9199;
       font-size: 25px;
