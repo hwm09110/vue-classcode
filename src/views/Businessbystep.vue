@@ -153,7 +153,6 @@ import BottomTips from '@c/BottomTips'
 import ProgressBar from '@c/ProgressBar'
 import DownloadTips from '@c/DownloadTips'
 import utils from '@a/js/utils'
-import { all } from 'q';
 export default {
   name: 'businessbystep',
   components: {
@@ -242,47 +241,48 @@ export default {
       this.showMoreEntry = false
     },
     validateStep1() {
-      let result = {error:false,msg:''}
-      this.openPhones.forEach((item,index) => {
-        if(index == 0){
+      let result = {error:false, msg:''}
+      for(let i = 0, len = this.openPhones.length; i < len; i++){
+        let item = this.openPhones[i]
+        if(i == 0){
           if(!item.phone){
             result['error'] = true
             result['msg'] = "第一个手机号码不能为空"
-            return false
+            return result
           }
           if(item.phone && !utils.isPhoneNum(item.phone)){
             result['error'] = true
             result['msg'] = "第一个手机号码格式不正确"
-            return false
+            return result
           }
           if(!item.yzm){
             result['error'] = true
             result['msg'] = "开通验证码不能为空"
-            return false
+            return result
           }
           if(item.yzm && item.yzm.length !== 6){
             result['error'] = true
             result['msg'] = "开通验证码格式不正确(验证码为6位数)"
-            return false
+            return result
           }
         }else{
           if(item.phone && !utils.isPhoneNum(item.phone)){
             result['error'] = true
-            result['msg'] = "第"+( index + 1 )+"个手机号码格式不正确"
-            return false
+            result['msg'] = "第"+( i + 1 )+"个手机号码格式不正确"
+            return result
           }
           if(item.phone && !item.yzm){
             result['error'] = true
-            result['msg'] = "第"+( index + 1 )+"个手机号的开通验证码不能为空"
-            return false
+            result['msg'] = "第"+( i + 1 )+"个手机号的开通验证码不能为空"
+            return result
           }
           if(item.phone && item.yzm && item.yzm.length !== 6){
             result['error'] = true
-            result['msg'] = "第"+( index + 1 )+"个手机号的开通验证码格式不正确(验证码为6位数)"
-            return false
+            result['msg'] = "第"+( i + 1 )+"个手机号的开通验证码格式不正确(验证码为6位数)"
+            return result
           }
         }
-      })
+      }
       return result
     },
     validateStep2() {

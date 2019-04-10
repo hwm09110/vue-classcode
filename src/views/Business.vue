@@ -19,22 +19,22 @@
     <div class="phone-info-wrap">
       <p class="tips">请认真完整填写以下信息，我们将统一为您办理</p>
       <div class="sub-title">开通手机号</div>
-      <div class="phone-form-box">
-        <div class="form-item required">
-          <div class="item-label">开通业务手机号：</div>
+      <div class="phone-form-box" v-for="(item,index) of openPhones" :key="index">
+        <div :class="['form-item', {required:index==0}]">
+          <div class="item-label">开通业务手机号{{ openPhones.length > 1? (index + 1) : ''}}：</div>
           <div class="item-content">
-            <input type="number">
+            <input type="number" v-model.trim="item.phone" placeholder="填写手机号码">
           </div>
         </div>
-        <div class="form-item required">
+        <div :class="['form-item', {required:index==0}]">
           <div class="item-label">验证码：</div>
           <div class="item-content">
-            <input type="number" placeholder="填写6位验证码">
+            <input type="number" placeholder="填写6位验证码" v-model.trim="item.yzm">
           </div>
         </div>
       </div>
       <div class="get-phonecode">
-        <span class="send-msg-tips">使用开通业务手机号（限河南移动），编辑短信3496 发送到10086，将获得的验证码。</span>
+        <span class="send-msg-tips">{{getcodetips}}</span>
         <span class="sendmsg-btn">发送短信</span>
       </div>
       <div class="fee-box">
@@ -52,58 +52,34 @@
         <div class="form-item required">
           <div class="item-label">姓名：</div>
           <div class="item-content">
-            <input type="text">
+            <input type="text" v-model="studentInfo.name">
           </div>
         </div>
       </div>
       <div class="relphone-tips">亲情号码（学生持卡可免费拨打电话）</div>
       <div class="relphone-box">
-        <div class="item-box required">
-          <div class="label">第一联系人：</div>
+        <div :class="['item-box',{required:item.isrequire == 1}]" v-for="(item,index) of relphones" :key="index" v-show="index < showRelPhoneInputNum">
+          <div class="label">第{{chineseNumber[index]}}联系人：</div>
           <div class="phone">
-            <input type="number">
+            <input type="number" placeholder="输入手机号码" v-model.trim="item.phone">
           </div>
           <div class="relation">
-            <select class="select-rel">
-              <option value="">爸爸</option>
-              <option value="">妈妈</option>
-            </select>
-          </div>
-        </div>
-        <div class="item-box required">
-          <div class="label">第二联系人：</div>
-          <div class="phone">
-            <input type="number">
-          </div>
-          <div class="relation">
-            <select class="select-rel">
-              <option value="">爸爸</option>
-              <option value="">妈妈</option>
-            </select>
-          </div>
-        </div>
-        <div class="item-box">
-          <div class="label">第二联系人：</div>
-          <div class="phone">
-            <input type="number">
-          </div>
-          <div class="relation">
-            <select class="select-rel">
-              <option value="">爸爸</option>
-              <option value="">妈妈</option>
+            <select class="select-rel" v-model="item.rel">
+              <option value="">与学生关系</option>
+							<option :value="rel" v-for="(rel,j) of relations" :key="j">{{rel}}</option>
             </select>
           </div>
         </div>
       </div>
-      <div class="open-more">
-        <span class="more-btn">填写更多联系人</span>
+      <div class="open-more" v-show="showMoreEntry">
+        <span class="more-btn" @click="handleGetMore">填写更多联系人</span>
       </div>
     </div>
     <div class="bottom-wrap">
       <div class="operate-box">
-        <button class="open-btn">立即开通</button>
+        <button class="open-btn" @click="handleSubmit">立即开通</button>
       </div>
-      <bottom-tips></bottom-tips>
+      <bottom-tips :isAgree.sync="isChecked"></bottom-tips>
     </div>
   </div>
 </template>
@@ -111,6 +87,7 @@
 <script>
 import Tab from '@c/Tab'
 import BottomTips from '@c/BottomTips'
+import utils from '@a/js/utils'
 export default {
   name: 'business',
   components: {
@@ -129,14 +106,129 @@ export default {
           name: '致家长一封信',
           pathName: 'letter'
         }
-      ]
+      ],
+      isChecked: true, //是否同意用户协议
+      getcodetips: "使用开通业务手机号（限河南移动），编辑短信3496 发送到10086，将获得的验证码。",
+      chineseNumber: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'],
+      relations: ['爸爸', '妈妈', '爷爷', '奶奶', '姑姑', '叔叔'],
+      showRelPhoneInputNum:1,
+      showMoreEntry:true, //显示添加更多联系人入口
+      //开通业务手机号码 
+      openPhones: [
+        {phone:'18202038213', yzm:'123456'},
+        {phone:'', yzm:''},
+      ],
+      //学生信息
+      studentInfo: {
+        name: '黄伟明',
+        gender: 1, //1男 2女 
+      },
+      //亲情号码
+      relphones: [
+        {isrequire:1, isrel:'1', phone:'18202038215', rel:'爷爷', id:'1'},
+        {isrequire:0, isrel:'1', phone:'', rel:'', id:'2'},
+        {isrequire:0, isrel:'1', phone:'', rel:'', id:'3'},
+      ] 
     }
   },
   methods: {
     handleTabClick (index, item) {
       this.active = index
       this.$router.push({name:item.pathName})
-    }
+    },
+    handleGetMore() {
+      this.showRelPhoneInputNum = this.relphones.length
+      this.showMoreEntry = false
+    },
+    //验证开通业务手机号和验证码
+    validateOpenPhone() {
+      let result = {error:false, msg:''}
+      for(let i = 0, len = this.openPhones.length; i < len; i++){
+        let item = this.openPhones[i]
+        if(i == 0){
+          if(!item.phone){
+            result['error'] = true
+            result['msg'] = "第一个手机号码不能为空"
+            return result
+          }
+          if(item.phone && !utils.isPhoneNum(item.phone)){
+            result['error'] = true
+            result['msg'] = "第一个手机号码格式不正确"
+            return result
+          }
+          if(!item.yzm){
+            result['error'] = true
+            result['msg'] = "开通验证码不能为空"
+            return result
+          }
+          if(item.yzm && item.yzm.length !== 6){
+            result['error'] = true
+            result['msg'] = "开通验证码格式不正确(验证码为6位数)"
+            return result
+          }
+        }else{
+          if(item.phone && !utils.isPhoneNum(item.phone)){
+            result['error'] = true
+            result['msg'] = "第"+( i + 1 )+"个手机号码格式不正确"
+            return result
+          }
+          if(item.phone && !item.yzm){
+            result['error'] = true
+            result['msg'] = "第"+( i + 1 )+"个手机号的开通验证码不能为空"
+            return result
+          }
+          if(item.phone && item.yzm && item.yzm.length !== 6){
+            result['error'] = true
+            result['msg'] = "第"+( i + 1 )+"个手机号的开通验证码格式不正确(验证码为6位数)"
+            return result
+          }
+        }
+      }
+      return result
+    },
+    //验证亲情号码
+    validateRelPhone() {
+      let result = {error:false,msg:''}
+      for(let i = 0, len = this.relphones.length; i < len; i++){
+        let item = this.relphones[i]
+        if(item.isrequire == 1){
+          if(!item.phone){
+            result['error'] = true
+            result['msg'] = "亲情号码第"+(this.chineseNumber[i])+"联系人手机号码为必填选项"
+            console.log(i);
+            return result
+          }
+        }
+        if(item.phone && !utils.isPhoneNum(item.phone)){
+          result['error'] = true
+          result['msg'] = "亲情号码第"+(this.chineseNumber[i])+"联系人手机号码格式不正确"
+          console.log(i);
+          return result
+        }
+      }
+      return result
+    },
+    //立即开通
+    handleSubmit() {
+      let result = this.validateOpenPhone()
+      console.log(result);
+      if(result.error){
+        alert(result.msg)
+        return false
+      }
+    },
+    //设置发送短信内容到10086
+    setSendmsg() {
+			const $sendmsg = document.querySelector('.sendmsg-btn')
+			if(utils.isIphone()){
+				$sendmsg.setAttribute('href','sms:10086&body=3496')
+			}else{
+				$sendmsg.setAttribute('href','sms:10086?body=3496')
+			}
+		}
+  },
+  mounted() {
+    this.setSendmsg()
   }
 }
 </script>
