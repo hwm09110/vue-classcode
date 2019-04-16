@@ -7,7 +7,7 @@ function isIphone(){
   return /(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)
 }
 
-export default {
+export {
   isPhoneNum,
   isIphone
 }

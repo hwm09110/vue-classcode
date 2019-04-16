@@ -152,7 +152,7 @@ import Tab from '@c/Tab'
 import BottomTips from '@c/BottomTips'
 import ProgressBar from '@c/ProgressBar'
 import DownloadTips from '@c/DownloadTips'
-import utils from '@a/js/utils'
+import { isPhoneNum, isIphone } from '@a/js/utils'
 export default {
   name: 'businessbystep',
   components: {
@@ -250,7 +250,7 @@ export default {
             result['msg'] = "第一个手机号码不能为空"
             return result
           }
-          if(item.phone && !utils.isPhoneNum(item.phone)){
+          if(item.phone && !isPhoneNum(item.phone)){
             result['error'] = true
             result['msg'] = "第一个手机号码格式不正确"
             return result
@@ -266,7 +266,7 @@ export default {
             return result
           }
         }else{
-          if(item.phone && !utils.isPhoneNum(item.phone)){
+          if(item.phone && !isPhoneNum(item.phone)){
             result['error'] = true
             result['msg'] = "第"+( i + 1 )+"个手机号码格式不正确"
             return result
@@ -302,7 +302,7 @@ export default {
             return result
           }
         }
-        if(item.phone && !utils.isPhoneNum(item.phone)){
+        if(item.phone && !isPhoneNum(item.phone)){
           result['error'] = true
           result['msg'] = "亲情号码第"+(this.chineseNumber[i])+"联系人手机号码格式不正确"
           console.log(i);
@@ -343,7 +343,7 @@ export default {
     //设置发送短信内容到10086
     setSendmsg() {
 			var $sendmsg = document.querySelector('.sendmsg')
-			if(utils.isIphone()){
+			if(isIphone()){
 				$sendmsg.setAttribute('href','sms:10086&body=3496')
 			}else{
 				$sendmsg.setAttribute('href','sms:10086?body=3496')
